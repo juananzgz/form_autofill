@@ -33,7 +33,11 @@ This project consists of two main components:
 
 ### 1. Capture Coordinates (`get_coords.sh`)
 
-This script will help you create a `coords.txt` file containing the screen positions of your form fields and the final submit/action button.
+This script helps you create a `coords.txt` file. Each entry in this file defines a named screen position (X,Y coordinate). These names and coordinates drive the automation:
+
+-   **For Data Entry:** If a name you define in `coords.txt` **matches a header in your CSV file**, the script will type the corresponding data from the CSV into the field at these coordinates.
+-   **For Click-Only Actions:** If a name in `coords.txt` **does not match any header in your CSV file**, the script will simply perform a click at these coordinates.
+-   **Order Matters:** The sequence of these click-only actions is determined by their order in `coords.txt`. Data entry fields are processed first (matching CSV header order), followed by all click-only actions in their defined sequence.
 
 a.  **Make the script executable:**
     ```bash
@@ -53,17 +57,19 @@ c.  **Follow the on-screen prompts:**
 
     **Example `coords.txt`:**
     ```
-    firstname:850,350
-    lastname:850,400
-    email:850,450
-    submit_button:900,520
+    username:850,350       # Matches CSV header 'username', will type data
+    password:850,400       # Matches CSV header 'password', will type data
+    terms_checkbox:800,450 # Does not match any CSV header, will be clicked
+    login_button:900,520   # Does not match any CSV header, will be clicked after 'terms_checkbox'
     ```
-    **Important:** The names you give here (except for the submit button) **must match** the headers in your CSV file.
+    **Important:**
+    - Names intended for data entry **must exactly match** the corresponding headers in your CSV file.
+    - Names for click-only actions can be anything descriptive.
+    - The order of click-only actions in this file dictates their execution order.
 
 ### 2. Prepare Your CSV Data File
 
 Create a CSV file (e.g., `data.csv`) where:
-
 -   The first row contains headers, and fields **must be separated by semicolons (;)**. These headers **must match the names** you assigned to the coordinates in `coords.txt` (e.g., if you used `firstname` in `coords.txt`, your CSV should have a `firstname` column).
 -   Subsequent rows contain the data to be filled into the form, also using semicolons as delimiters.
 -   *Note: The semicolon delimiter is used to avoid conflicts with data that might contain commas (e.g., decimal numbers in some European formats or free text fields).*
@@ -73,7 +79,6 @@ Create a CSV file (e.g., `data.csv`) where:
 firstname;lastname;email
 John;Doe;john.doe@example.com
 Jane;Smith;jane.smith@example.com
-
 ```
 
 ### 3. Run the Form Filler (`form_filler.py`)
@@ -84,34 +89,33 @@ a.  **Open the target application/web page** that you want to fill.
 
 b.  **Run the script from your terminal:**
     ```bash
-    python3 form_filler.py your_data.csv --submit-button-name your_submit_button_name
+    python3 form_filler.py your_data.csv
     ```
     -   Replace `your_data.csv` with the path to your CSV file.
-    -   Replace `your_submit_button_name` with the exact name you gave to your submit/action button in `get_coords.sh` (e.g., `submit_button`).
+    -   You can also use optional arguments like `--coords-file` and `--delay`.
 
 c.  **Switch to the target application window quickly!** The script has a short delay (3 seconds by default after starting) before it begins controlling your mouse and keyboard.
 
 **Command-line Arguments for `form_filler.py`:**
 -   `csv_file`: (Required) Path to your CSV data file.
 -   `--coords-file COORDS_FILE` or `--coords_file COORDS_FILE`: (Optional) Path to your coordinates file. Defaults to `coords.txt` in the same directory.
--   `--delay DELAY`: (Optional) Delay in seconds between GUI actions. Default is `0.5`.
--   `--submit-button-name SUBMIT_BUTTON_NAME` or `--submit_button_name SUBMIT_BUTTON_NAME`: (Required) The name of the submit button as defined in your coordinates file.
+-   `--delay DELAY`: (Optional) General delay in seconds between most GUI actions. Default is `0.5`.
 
 **Example Usage:**
 ```bash
-python3 form_filler.py data.csv --submit-button-name submit_button --delay 0.7
+python3 form_filler.py data.csv --coords-file my_custom_coords.txt --delay 0.7
 ```
-*(Note: The script `form_filler.py` uses `argparse`, which typically allows both `-` and `_` in argument names, so `--submit-button-name` and `--submit_button_name` should both work, as should `--coords-file` and `--coords_file`.)*
+*(Note: The script `form_filler.py` uses `argparse`, which typically allows both `-` and `_` in argument names, e.g. `--coords-file` and `--coords_file` should both work.)*
 
 ## How It Works
 
-1.  `get_coords.sh` uses `xdotool getmouselocation --shell` to find out where your mouse is pointing after a timed delay. It stores these named coordinates.
-2.  `form_filler.py` parses the coordinate file and the CSV file.
+1.  `get_coords.sh` uses `xdotool getmouselocation --shell` to find out where your mouse is pointing after a timed delay. It stores these named coordinates in the order you define them.
+2.  `form_filler.py` parses the coordinate file (e.g., `coords.txt`) and the CSV data file. It identifies which coordinate names from `coords.txt` match headers in the CSV file.
 3.  For each row in the CSV:
-    -   It iterates through the CSV headers.
-    -   For each header, it looks up the corresponding coordinate.
-    -   It uses `pyautogui` to move the mouse to that coordinate, click, and type the data from the CSV cell.
-    -   After processing all data cells in a row, it clicks the designated submit button's coordinates.
+    -   **Data Entry:** The script iterates through the CSV headers. If a CSV header matches a name defined in `coords.txt`, it moves the mouse to the corresponding (X,Y) position, clicks, and types the data from the current CSV row's cell for that header. The `--delay` argument applies after each typing action.
+    -   **Click-Only Actions:** After processing all CSV headers for the current row, the script then processes any "click-only" actions. These are coordinates defined in `coords.txt` whose names *did not* match any CSV header. These actions are performed in the sequence they appeared in `coords.txt`.
+        -   A **1-second hardcoded delay** occurs *between each* of these sequential click-only actions. This is independent of the `--delay` argument.
+    -   The general `--delay` is applied once more after all actions (typing and clicking) for the current row are complete, before moving to the next row.
 
 ## Troubleshooting
 
