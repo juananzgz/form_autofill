@@ -63,6 +63,7 @@ c.  **Follow the on-screen prompts:**
 ### 2. Prepare Your CSV Data File
 
 Create a CSV file (e.g., `data.csv`) where:
+
 -   The first row contains headers, and fields **must be separated by semicolons (;)**. These headers **must match the names** you assigned to the coordinates in `coords.txt` (e.g., if you used `firstname` in `coords.txt`, your CSV should have a `firstname` column).
 -   Subsequent rows contain the data to be filled into the form, also using semicolons as delimiters.
 -   *Note: The semicolon delimiter is used to avoid conflicts with data that might contain commas (e.g., decimal numbers in some European formats or free text fields).*
@@ -72,6 +73,7 @@ Create a CSV file (e.g., `data.csv`) where:
 firstname;lastname;email
 John;Doe;john.doe@example.com
 Jane;Smith;jane.smith@example.com
+
 ```
 
 ### 3. Run the Form Filler (`form_filler.py`)
