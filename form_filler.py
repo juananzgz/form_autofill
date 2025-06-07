@@ -87,7 +87,9 @@ def read_csv_data(csv_filepath: str) -> list:
     data_rows = []
     try:
         with open(csv_filepath, mode='r', encoding='utf-8-sig') as csvfile: # utf-8-sig handles BOM
-            reader = csv.DictReader(csvfile)
+
+            reader = csv.DictReader(csvfile, delimiter=';')
+
             for row in reader:
                 data_rows.append(row)
     except Exception as e:
