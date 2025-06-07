@@ -22,17 +22,21 @@ except ImportError:
     print("On Linux, you may also need: sudo apt-get install scrot python3-tk python3-dev xclip")
     exit(1)
 
-def parse_coordinates(coords_filepath: str) -> dict:
+def parse_coordinates(coords_filepath: str) -> tuple[dict, list]:
     """
-    Parses a coordinates file (e.g., coords.txt) into a dictionary.
+    Parses a coordinates file (e.g., coords.txt) into a dictionary
+    and a list of names in their original order.
 
     Args:
         coords_filepath: Path to the coordinates file.
                          Each line should be in the format: name:X,Y
 
     Returns:
-        A dictionary mapping names to (X, Y) integer tuples.
-        Example: {'username_field': (150, 300), 'submit_button': (200, 400)}
+        A tuple containing:
+        - coordinates_map: A dictionary mapping names to (X, Y) integer tuples.
+                           Example: {'username_field': (150, 300), 'submit_button': (200, 400)}
+        - ordered_coord_names: A list of names in the order they appeared in the file.
+                               Example: ['username_field', 'submit_button']
 
     Raises:
         FileNotFoundError: If the coordinates file does not exist.
@@ -41,6 +45,7 @@ def parse_coordinates(coords_filepath: str) -> dict:
         raise FileNotFoundError(f"Error: Coordinates file not found at '{coords_filepath}'")
 
     coordinates_map = {}
+    ordered_coord_names = []
     try:
         with open(coords_filepath, 'r') as f:
             for line_num, line in enumerate(f, 1):
@@ -58,13 +63,14 @@ def parse_coordinates(coords_filepath: str) -> dict:
                     x = int(x_str.strip())
                     y = int(y_str.strip())
                     coordinates_map[name] = (x, y)
+                    ordered_coord_names.append(name)
                 except ValueError:
                     print(f"Warning: Skipping malformed coordinate format on line {line_num} in '{coords_filepath}': '{line}'")
     except Exception as e:
         print(f"Error reading or parsing coordinates file '{coords_filepath}': {e}")
-        # Potentially re-raise or return empty dict depending on desired strictness
-        return {} # Return empty/partial map on error
-    return coordinates_map
+        # Potentially re-raise or return empty dict/list depending on desired strictness
+        return {}, [] # Return empty map and list on error
+    return coordinates_map, ordered_coord_names
 
 def read_csv_data(csv_filepath: str) -> list:
     """
@@ -87,9 +93,7 @@ def read_csv_data(csv_filepath: str) -> list:
     data_rows = []
     try:
         with open(csv_filepath, mode='r', encoding='utf-8-sig') as csvfile: # utf-8-sig handles BOM
-
             reader = csv.DictReader(csvfile, delimiter=';')
-
             for row in reader:
                 data_rows.append(row)
     except Exception as e:
@@ -107,22 +111,20 @@ def main():
                         help="Path to the coordinates file (default: coords.txt).")
     parser.add_argument("--delay", type=float, default=0.5,
                         help="Delay in seconds between pyautogui actions (default: 0.5).")
-    parser.add_argument("--submit_button_name", required=True,
-                        help="The name of the submit button as defined in the coordinates file (e.g., 'submit_button').")
 
     args = parser.parse_args()
 
     try:
         print(f"Loading coordinates from: {args.coords_file}")
-        coordinates_map = parse_coordinates(args.coords_file)
-        if not coordinates_map:
-            print("No coordinates were loaded. Exiting.")
+        coordinates_map, ordered_coord_names = parse_coordinates(args.coords_file)
+        if not coordinates_map or not ordered_coord_names:
+            print(f"No coordinates loaded from '{args.coords_file}' or file is empty/invalid. Exiting.")
             return
 
         print(f"Loading CSV data from: {args.csv_file}")
         form_data_rows = read_csv_data(args.csv_file)
         if not form_data_rows:
-            print("No data loaded from CSV file. Exiting.")
+            print(f"No data loaded from CSV file '{args.csv_file}' or file is empty. Exiting.")
             return
 
     except FileNotFoundError as e:
@@ -132,38 +134,66 @@ def main():
         print(f"An unexpected error occurred during setup: {e}")
         return
 
+    # Identify CSV headers
+    csv_headers = list(form_data_rows[0].keys())
+    print(f"CSV Headers found: {csv_headers}")
+
+    # Separate coordinate types: those for typing (matching CSV headers) and click-only actions
+    click_only_actions = []
+    # Ensure to iterate ordered_coord_names to respect the order from coords.txt for click-only actions
+    for name in ordered_coord_names:
+        if name not in csv_headers: # This is a click-only action
+            if name in coordinates_map:
+                click_only_actions.append((name, coordinates_map[name]))
+            else:
+                # This case should ideally not happen if parse_coordinates is consistent
+                print(f"Warning: Name '{name}' from ordered list not found in coordinates_map. Skipping.")
+
+    if not any(header in coordinates_map for header in csv_headers) and not click_only_actions:
+        print("Error: No CSV headers match any defined coordinates, and no click-only actions defined. Nothing to automate. Exiting.")
+        return
+
     # --- GUI Automation ---
     print("\nStarting GUI automation process...")
     print("IMPORTANT: Please do not move the mouse or use the keyboard during automation!")
     print("You have 3 seconds to switch to the target window...")
     time.sleep(3) # Give user time to switch to the target window
 
-    submit_coords = coordinates_map.get(args.submit_button_name)
-    if not submit_coords:
-        print(f"Error: Submit button name '{args.submit_button_name}' not found in coordinates file. Exiting.")
-        return
-
     for i, row in enumerate(form_data_rows):
         print(f"\nProcessing row {i+1}/{len(form_data_rows)}: {row}")
         try:
-            for header, value in row.items():
+            # 1. Process data fields based on CSV header order
+            print("  Processing data fields...")
+            for header in csv_headers:
+                value = row.get(header) # Use .get() for safety, though keys should exist
+                if value is None: # Handle if a row is missing a header defined in CSV - unusual for DictReader
+                    print(f"  Warning: Header '{header}' not found in current row or value is None. Skipping.")
+                    continue
+
                 if header in coordinates_map:
                     x, y = coordinates_map[header]
-                    print(f"  Filling field '{header}' at ({x},{y}) with value '{value}'")
+                    print(f"    Filling field '{header}' at ({x},{y}) with value '{value}'")
                     pyautogui.moveTo(x, y, duration=0.2)
                     pyautogui.click()
                     time.sleep(args.delay / 2) # Short sleep after click
                     pyautogui.typewrite(str(value), interval=0.05) # Type with small interval
                     time.sleep(args.delay)
                 else:
-                    print(f"  Warning: No coordinate found for field '{header}'. Skipping.")
+                    # This header is in CSV but not in coords.txt for typing
+                    print(f"  Warning: CSV header '{header}' has no coordinate defined in {args.coords_file}. Skipping field.")
 
-            # Click the submit button for the current row
-            print(f"  Clicking submit button '{args.submit_button_name}' at ({submit_coords[0]},{submit_coords[1]})")
-            pyautogui.moveTo(submit_coords[0], submit_coords[1], duration=0.2)
-            pyautogui.click()
-            print("  Submit button clicked.")
-            time.sleep(args.delay * 2) # Longer sleep after submit
+            # 2. Execute click-only actions in the order they appeared in coords.txt
+            print("  All data fields processed for this row. Executing click-only actions...")
+            if click_only_actions:
+                for action_name, (x,y) in click_only_actions:
+                    print(f"    Clicking '{action_name}' at ({x},{y}).")
+                    pyautogui.moveTo(x, y, duration=0.2)
+                    pyautogui.click()
+                    time.sleep(1) # 1-second delay BETWEEN these click-only actions
+            else:
+                print("    No click-only actions defined or found.")
+
+            time.sleep(args.delay) # Configurable delay after all actions for a row
 
         except pyautogui.FailSafeException:
             print("\nFAIL-SAFE TRIGGERED! PyAutoGUI mouse movement to a corner of the screen was detected.")
