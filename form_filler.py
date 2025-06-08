@@ -134,66 +134,48 @@ def main():
         print(f"An unexpected error occurred during setup: {e}")
         return
 
-    # Identify CSV headers
-    csv_headers = list(form_data_rows[0].keys())
-    print(f"CSV Headers found: {csv_headers}")
-
-    # Separate coordinate types: those for typing (matching CSV headers) and click-only actions
-    click_only_actions = []
-    # Ensure to iterate ordered_coord_names to respect the order from coords.txt for click-only actions
-    for name in ordered_coord_names:
-        if name not in csv_headers: # This is a click-only action
-            if name in coordinates_map:
-                click_only_actions.append((name, coordinates_map[name]))
-            else:
-                # This case should ideally not happen if parse_coordinates is consistent
-                print(f"Warning: Name '{name}' from ordered list not found in coordinates_map. Skipping.")
-
-    if not any(header in coordinates_map for header in csv_headers) and not click_only_actions:
-        print("Error: No CSV headers match any defined coordinates, and no click-only actions defined. Nothing to automate. Exiting.")
-        return
-
     # --- GUI Automation ---
     print("\nStarting GUI automation process...")
     print("IMPORTANT: Please do not move the mouse or use the keyboard during automation!")
     print("You have 3 seconds to switch to the target window...")
     time.sleep(3) # Give user time to switch to the target window
 
+
+    # Define csv_headers here if needed for some initial checks,
+    # but the primary logic will use 'action_name in row'
+    # csv_headers = list(form_data_rows[0].keys()) # Example if needed elsewhere
+
     for i, row in enumerate(form_data_rows):
         print(f"\nProcessing row {i+1}/{len(form_data_rows)}: {row}")
         try:
-            # 1. Process data fields based on CSV header order
-            print("  Processing data fields...")
-            for header in csv_headers:
-                value = row.get(header) # Use .get() for safety, though keys should exist
-                if value is None: # Handle if a row is missing a header defined in CSV - unusual for DictReader
-                    print(f"  Warning: Header '{header}' not found in current row or value is None. Skipping.")
+            for action_name in ordered_coord_names:
+                if action_name not in coordinates_map:
+                    print(f"  Warning: Action '{action_name}' from ordered list not in coordinates_map. Skipping.")
                     continue
 
-                if header in coordinates_map:
-                    x, y = coordinates_map[header]
-                    print(f"    Filling field '{header}' at ({x},{y}) with value '{value}'")
+                x, y = coordinates_map[action_name]
+
+                # Check if action_name corresponds to a data field in the current CSV row
+                if action_name in row:
+                    value = row[action_name] # Direct access as 'action_name in row' is true
+                    print(f"    Performing data entry for '{action_name}' at ({x},{y}) with value '{value}'")
                     pyautogui.moveTo(x, y, duration=0.2)
                     pyautogui.click()
-                    time.sleep(args.delay / 2) # Short sleep after click
-                    pyautogui.typewrite(str(value), interval=0.05) # Type with small interval
-                    time.sleep(args.delay)
+                    time.sleep(args.delay / 2) # Short sleep after click before typing
+                    pyautogui.typewrite(str(value), interval=0.05)
+                    print(f"    Typed '{value}' into field '{action_name}'.")
+                    time.sleep(args.delay) # General delay after typing a field
                 else:
-                    # This header is in CSV but not in coords.txt for typing
-                    print(f"  Warning: CSV header '{header}' has no coordinate defined in {args.coords_file}. Skipping field.")
-
-            # 2. Execute click-only actions in the order they appeared in coords.txt
-            print("  All data fields processed for this row. Executing click-only actions...")
-            if click_only_actions:
-                for action_name, (x,y) in click_only_actions:
-                    print(f"    Clicking '{action_name}' at ({x},{y}).")
+                    # This is a click-only action
+                    print(f"    Performing click-only action '{action_name}' at ({x},{y}).")
                     pyautogui.moveTo(x, y, duration=0.2)
                     pyautogui.click()
-                    time.sleep(1) # 1-second delay BETWEEN these click-only actions
-            else:
-                print("    No click-only actions defined or found.")
+                    print(f"    Clicked '{action_name}'.")
+                    time.sleep(1) # 1-second delay specifically for click-only actions
 
-            time.sleep(args.delay) # Configurable delay after all actions for a row
+            print(f"  All actions for row {i+1} completed.")
+            time.sleep(args.delay * 2) # Longer delay after all actions for a row are complete
+
 
         except pyautogui.FailSafeException:
             print("\nFAIL-SAFE TRIGGERED! PyAutoGUI mouse movement to a corner of the screen was detected.")
