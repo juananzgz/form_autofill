@@ -37,7 +37,9 @@ This script helps you create a `coords.txt` file. Each entry in this file define
 
 -   **For Data Entry:** If a name you define in `coords.txt` **matches a header in your CSV file**, the script will type the corresponding data from the CSV into the field at these coordinates.
 -   **For Click-Only Actions:** If a name in `coords.txt` **does not match any header in your CSV file**, the script will simply perform a click at these coordinates.
+
 -   **Order is Paramount:** The `coords.txt` file now defines an **exact script of operations** to be performed for each row in your CSV file. Actions (typing or clicking) are executed in the precise order they appear in `coords.txt`.
+
 
 a.  **Make the script executable:**
     ```bash
@@ -57,6 +59,7 @@ c.  **Follow the on-screen prompts:**
 
     **Example `coords.txt`:**
     ```
+
     email_field:100,200     # If 'email_field' is in CSV, types data. Else, clicks.
     company_name:100,250  # If 'company_name' is in CSV, types data. Else, clicks.
     next_step_button:50,300 # Likely not in CSV, so this will be a click.
@@ -68,6 +71,7 @@ c.  **Follow the on-screen prompts:**
     - If the `name` matches a CSV header, the script types the data from that CSV field.
     - If the `name` does not match any CSV header for the current row, the script performs a click.
     - This process is repeated sequentially for every entry in `coords.txt`.
+
 
 ### 2. Prepare Your CSV Data File
 
@@ -111,6 +115,7 @@ python3 form_filler.py data.csv --coords-file my_custom_coords.txt --delay 0.7
 
 ## How It Works
 
+
 1.  **Coordinate Scripting (`get_coords.sh` & `coords.txt`):**
     -   `get_coords.sh` helps you create `coords.txt`.
     -   `coords.txt` acts as an **ordered script of actions**. Each line defines a named coordinate (`action_name:X,Y`). The sequence of these lines is critical.
@@ -135,6 +140,7 @@ python3 form_filler.py data.csv --coords-file my_custom_coords.txt --delay 0.7
     -   **Typing Action:** `args.delay / 2` (before typing) + `args.delay` (after typing).
     -   **Click-Only Action:** Fixed 1-second delay after the click.
     -   **End of CSV Row:** After all actions from `coords.txt` are performed for a CSV row, a longer delay of `args.delay * 2` occurs before processing the next CSV row. This gives time for the UI to update (e.g., page loads).
+
 
 ## Troubleshooting
 
