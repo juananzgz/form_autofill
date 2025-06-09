@@ -1,4 +1,4 @@
-# Robot Llenador de Formularios
+# Robot Rellenador de Formularios
 
 Este proyecto consta de dos componentes principales:
 1.  Un script de shell para Linux (`get_coords.sh`) o una app en python (`get_coords.py`) para capturar las coordenadas de la pantalla para campos de formulario y botones.
