@@ -140,6 +140,7 @@ def main():
     print("You have 3 seconds to switch to the target window...")
     time.sleep(3) # Give user time to switch to the target window
 
+
     # Define csv_headers here if needed for some initial checks,
     # but the primary logic will use 'action_name in row'
     # csv_headers = list(form_data_rows[0].keys()) # Example if needed elsewhere
@@ -174,6 +175,7 @@ def main():
 
             print(f"  All actions for row {i+1} completed.")
             time.sleep(args.delay * 2) # Longer delay after all actions for a row are complete
+
 
         except pyautogui.FailSafeException:
             print("\nFAIL-SAFE TRIGGERED! PyAutoGUI mouse movement to a corner of the screen was detected.")

@@ -1,10 +1,13 @@
 # Form Filler Bot
 
 This project consists of two main components:
+
 1.  A Linux shell script (`get_coords.sh`) or Python app (`get_coords_py.py`) to capture screen coordinates for form fields and buttons.
+
 2.  A Python application (`form_filler.py`) that reads data from a CSV file and uses the captured coordinates to automatically fill and submit web forms or other GUI applications.
 
 ## Features
+
 
 -   **Coordinate Capturing:** Interactively capture X,Y coordinates using Python (`get_coords_py.py`) or a shell script on Linux (`get_coords.sh`).
 -   **CSV Data Input:** Reads data from a CSV file (semicolon-delimited), with the first row expected to be headers.
@@ -103,6 +106,7 @@ c.  **Follow the on-screen prompts:**
 
     **Example `coords.txt`:**
     ```
+
     email_field:100,200     # If 'email_field' is in CSV for the current row, types data. Else, clicks.
     company_name:100,250  # If 'company_name' is in CSV for the current row, types data. Else, clicks.
     next_step_button:50,300 # Likely not a CSV header, so this will usually be a click.
@@ -114,6 +118,7 @@ c.  **Follow the on-screen prompts:**
     - If `action_name` matches a CSV header, the script types the data from that CSV field at the (X,Y) position.
     - If `action_name` does not match any CSV header for the current row, the script performs a click at (X,Y).
     - This process is repeated sequentially for every entry in `coords.txt`, for each row in the CSV. The order in `coords.txt` is strictly followed.
+
 
 ### 2. Prepare Your CSV Data File
 
@@ -137,6 +142,7 @@ a.  **Open the target application/web page** that you want to fill.
 
 b.  **Run the script from your terminal:**
     ```bash
+
     # For Windows (assuming Python is in PATH)
     python form_filler.py your_data.csv
 
@@ -144,6 +150,7 @@ b.  **Run the script from your terminal:**
     python3 form_filler.py your_data.csv
     # Or if python is already Python 3:
     # python form_filler.py your_data.csv
+
     ```
     -   Replace `your_data.csv` with the path to your CSV file.
     -   You can also use optional arguments like `--coords-file` and `--delay`.
@@ -152,6 +159,7 @@ c.  **Switch to the target application window quickly!** The script has a short 
 
 **Command-line Arguments for `form_filler.py`:**
 -   `csv_file`: (Required) Path to your CSV data file.
+
 -   `--coords-file COORDS_FILE` (or `--coords_file`): (Optional) Path to your coordinates file. Defaults to `coords.txt`.
 -   `--delay DELAY`: (Optional) General delay in seconds between most GUI actions. Default is `0.5`.
 
@@ -189,6 +197,7 @@ python form_filler.py data.csv --coords-file my_custom_coords.txt --delay 0.7
     -   **After Typing (Data Entry):** `args.delay`.
     -   **After Click-Only Action:** Fixed 1-second delay.
     -   **End of each CSV Row Processing:** After all actions defined in `coords.txt` are performed for a single CSV row, a longer delay of `args.delay * 2` occurs. This is intended to give the UI time to react (e.g., process submissions, load new pages) before the next row's automation begins.
+
 
 ## Troubleshooting
 
