@@ -1,7 +1,7 @@
 # Form Filler Bot
 
 This project consists of two main components:
-1.  A Linux shell script (`get_coords.sh`) to capture screen coordinates for form fields and buttons.
+1.  A Linux shell script (`get_coords.sh`) or Python app (`get_coords_py.py`) to capture screen coordinates for form fields and buttons.
 2.  A Python application (`form_filler.py`) that reads data from a CSV file and uses the captured coordinates to automatically fill and submit web forms or other GUI applications.
 
 ## Features
