@@ -1,21 +1,21 @@
 # Robot Llenador de Formularios
 
 Este proyecto consta de dos componentes principales:
-1.  Un script de shell para Linux (`get_coords.sh`) para capturar las coordenadas de la pantalla para campos de formulario y botones.
+1.  Un script de shell para Linux (`get_coords.sh`) o una app en python (`get_coords.py`) para capturar las coordenadas de la pantalla para campos de formulario y botones.
 2.  Una aplicación Python (`form_filler.py`) que lee datos de un archivo CSV y utiliza las coordenadas capturadas para llenar y enviar automáticamente formularios web u otras aplicaciones GUI.
 
 ## Características
 
--   **Captura de Coordenadas:** Captura interactivamente coordenadas X,Y usando Python (`get_coords_py.py`) o un script de shell en Linux (`get_coords.sh`).
+-   **Captura de Coordenadas:** Captura interactivamente coordenadas X,Y usando Python (`get_coords.py`) o un script de shell en Linux (`get_coords.sh`).
 -   **Entrada de Datos CSV:** Lee datos de un archivo CSV (delimitado por punto y coma), esperando que la primera fila contenga las cabeceras.
 -   **Llenado Automático de Formularios:** Utiliza `pyautogui` para simular movimientos del ratón, clics y escritura.
 -   **Retrasos Configurables:** Permite ajustar los retrasos entre acciones para adaptarse a diferentes velocidades del sistema y capacidad de respuesta de la aplicación.
 -   **Interfaz de Línea de Comandos:** Todos los scripts se ejecutan desde la línea de comandos.
--   **Multiplataforma (componentes Python):** `get_coords_py.py` y `form_filler.py` están escritos en Python y deberían funcionar en Windows, macOS y Linux, siempre que Python y `pyautogui` estén configurados correctamente.
+-   **Multiplataforma (componentes Python):** `get_coords.py` y `form_filler.py` están escritos en Python y deberían funcionar en Windows, macOS y Linux, siempre que Python y `pyautogui` estén configurados correctamente.
 
 ## Prerrequisitos
 
-**Requisitos Principales (para `get_coords_py.py` y `form_filler.py`):**
+**Requisitos Principales (para `get_coords.py` y `form_filler.py`):**
 -   **Python 3:**
     -   **Windows:** Descargar desde `https://www.python.org/downloads/`. Asegúrate de marcar "Add Python to PATH" durante la instalación.
     -   **Linux/macOS:** Python 3 suele estar preinstalado. Si no, usa el gestor de paquetes de tu sistema (p.ej., `sudo apt install python3` en Debian/Ubuntu, o `brew install python` en macOS).
@@ -41,16 +41,16 @@ El flujo de trabajo general implica dos pasos principales:
 
 Tienes dos opciones para capturar coordenadas. Se recomienda el script basado en Python para compatibilidad multiplataforma.
 
-**a. Usando `get_coords_py.py` (Recomendado para Windows, macOS, Linux)**
+**a. Usando `get_coords.py` (Recomendado para Windows, macOS, Linux)**
 
 Este script de Python captura interactivamente las coordenadas del ratón y las guarda en `coords.txt`.
 
 -   **Ejecutar el script:**
     ```bash
     # Asegúrate de que Python esté instalado y en tu PATH
-    python get_coords_py.py
+    python get_coords.py
     ```
-    (En algunos sistemas, puede que necesites usar `python3` explícitamente: `python3 get_coords_py.py`)
+    (En algunos sistemas, puede que necesites usar `python3` explícitamente: `python3 get_coords.py`)
 
 -   **Sigue las instrucciones en pantalla:**
     -   Te preguntará si quieres sobrescribir o añadir a un `coords.txt` existente.
@@ -147,7 +147,7 @@ python form_filler.py datos.csv --coords-file mis_coords_personalizadas.txt --de
 
 ## Cómo Funciona
 
-1.  **Creación del Script de Coordenadas (usando `get_coords_py.py` o `get_coords.sh`):**
+1.  **Creación del Script de Coordenadas (usando `get_coords.py` o `get_coords.sh`):**
     -   Creas `coords.txt`. Este archivo actúa como un **script ordenado de acciones**. Cada línea define una coordenada nombrada (`nombre_accion:X,Y`). La secuencia de estas líneas es crítica.
 
 2.  **Automatización con Python (`form_filler.py`):**
@@ -176,7 +176,7 @@ python form_filler.py datos.csv --coords-file mis_coords_personalizadas.txt --de
 
 ## Solución de Problemas
 
--   **Coordenadas Incorrectas:** Si el ratón no está haciendo clic en los lugares correctos, vuelve a ejecutar `get_coords_py.py` (o `get_coords.sh`) con cuidado. Asegúrate de que la ventana de tu aplicación no se mueva ni cambie de tamaño entre la captura de coordenadas y la ejecución del llenador.
+-   **Coordenadas Incorrectas:** Si el ratón no está haciendo clic en los lugares correctos, vuelve a ejecutar `get_coords.py` (o `get_coords.sh`) con cuidado. Asegúrate de que la ventana de tu aplicación no se mueva ni cambie de tamaño entre la captura de coordenadas y la ejecución del llenador.
 -   **Problemas con `pyautogui`:**
     -   **FailSafeException:** Si `pyautogui` lanza una `FailSafeException`, significa que moviste el ratón a una esquina de la pantalla (normalmente arriba a la izquierda) como medida de seguridad para detener el script. El script está diseñado para capturar esto y salir de forma controlada.
     -   **Permisos/Servidor de Visualización:** En algunos sistemas Linux, `pyautogui` podría necesitar permisos adicionales o configuraciones específicas para controlar el ratón y el teclado. Esto es especialmente cierto bajo Wayland (intenta ejecutar en una sesión X11 si los problemas persisten). Consulta la documentación de `pyautogui` y las notas de instalación en `form_filler.py`.
