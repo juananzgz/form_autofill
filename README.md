@@ -2,23 +2,23 @@
 
 This project consists of two main components:
 
-1.  A Linux shell script (`get_coords.sh`) or Python app (`get_coords_py.py`) to capture screen coordinates for form fields and buttons.
+1.  A Linux shell script (`get_coords.sh`) or Python app (`get_coords.py`) to capture screen coordinates for form fields and buttons.
 
 2.  A Python application (`form_filler.py`) that reads data from a CSV file and uses the captured coordinates to automatically fill and submit web forms or other GUI applications.
 
 ## Features
 
 
--   **Coordinate Capturing:** Interactively capture X,Y coordinates using Python (`get_coords_py.py`) or a shell script on Linux (`get_coords.sh`).
+-   **Coordinate Capturing:** Interactively capture X,Y coordinates using Python (`get_coords.py`) or a shell script on Linux (`get_coords.sh`).
 -   **CSV Data Input:** Reads data from a CSV file (semicolon-delimited), with the first row expected to be headers.
 -   **Automated Form Filling:** Uses `pyautogui` to simulate mouse movements, clicks, and typing.
 -   **Configurable Delays:** Allows adjustment of delays between actions to suit different system speeds and application responsiveness.
 -   **Command-line Interface:** All scripts are run from the command line.
--   **Cross-Platform (Python components):** `get_coords_py.py` and `form_filler.py` are written in Python and should work on Windows, macOS, and Linux, provided Python and `pyautogui` are set up correctly.
+-   **Cross-Platform (Python components):** `get_coords.py` and `form_filler.py` are written in Python and should work on Windows, macOS, and Linux, provided Python and `pyautogui` are set up correctly.
 
 ## Prerequisites
 
-**Core Requirements (for `get_coords_py.py` and `form_filler.py`):**
+**Core Requirements (for `get_coords.py` and `form_filler.py`):**
 -   **Python 3:**
     -   **Windows:** Download from `https://www.python.org/downloads/`. Ensure "Add Python to PATH" is checked during installation.
     -   **Linux/macOS:** Python 3 is often pre-installed. If not, use your system's package manager (e.g., `sudo apt install python3` on Debian/Ubuntu, or `brew install python` on macOS).
@@ -44,16 +44,16 @@ The general workflow involves two main steps:
 
 You have two options for capturing coordinates. The Python-based script is recommended for cross-platform compatibility.
 
-**a. Using `get_coords_py.py` (Recommended for Windows, macOS, Linux)**
+**a. Using `get_coords.py` (Recommended for Windows, macOS, Linux)**
 
 This Python script interactively captures mouse coordinates and saves them to `coords.txt`.
 
 -   **Run the script:**
     ```bash
     # Ensure Python is installed and in your PATH
-    python get_coords_py.py
+    python get_coords.py
     ```
-    (On some systems, you might need to use `python3` explicitly: `python3 get_coords_py.py`)
+    (On some systems, you might need to use `python3` explicitly: `python3 get_coords.py`)
 
 -   **Follow on-screen prompts:**
     -   It will ask if you want to overwrite or append to an existing `coords.txt`.
@@ -171,7 +171,7 @@ python form_filler.py data.csv --coords-file my_custom_coords.txt --delay 0.7
 
 ## How It Works
 
-1.  **Coordinate Scripting (using `get_coords_py.py` or `get_coords.sh`):**
+1.  **Coordinate Scripting (using `get_coords.py` or `get_coords.sh`):**
     -   You create `coords.txt`. This file acts as an **ordered script of actions**. Each line defines a named coordinate (`action_name:X,Y`). The sequence of these lines is critical.
 
 2.  **Python Automation (`form_filler.py`):**
